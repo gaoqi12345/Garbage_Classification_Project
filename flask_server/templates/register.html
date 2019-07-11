@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register</title>
+    <script src="/static/js/jquery.min.js" type="text/javascript"></script>
+</head>
+<body>
+<input type="button" value="注册" onclick="register()">
+</body>
+</html>
+<script>
+    function register(){
+        $.ajax({
+            type:"post",
+            contentType:"application/json",
+            dataType:"json",
+            url:"http://127.0.0.1:8000/v1/users/register",
+            // data:JSON.stringify(post_data),
+            success:function(result){
+                if(200 == result.code){
+                    alert("测试成功,测试的数据为:"+result.data)
+                }else{
+                    alert(result.error)
+                }
+            }
+        });
+    }
+
+</script>
