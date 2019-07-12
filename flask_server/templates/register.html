@@ -6,22 +6,53 @@
     <script src="/static/js/jquery.min.js" type="text/javascript"></script>
 </head>
 <body>
-<input type="button" value="注册" onclick="register()">
+    <h1>创建一个新账户</h1>
+    <p>
+        用户名:<input type="text" class="hname" name="hname" placeholder="请输入用户名">
+    </p>
+    <p>
+        密码:<input type="password" class="hpwd" name="hpwd" placeholder="请输入用户名密码">
+    </p>
+    <p>
+        手机号:<input type="tel" class="tel" name="tel" placeholder="请输入手机号">
+    </p>
+    <p>
+        地址:<input type="text" class="address" name="address" placeholder="请输入住址">
+    </p>
+    <p>
+        邮箱:<input type="email" class="email" placeholder="请输入邮箱">
+    </p>
+
+<input type="button" value="注册" onclick="home_register()">
 </body>
 </html>
 <script>
-    function register(){
+    function home_register(){
+        var hname = $('.hname').val();
+        var hpwd = $('.hpwd').val();
+        var tel = $('.tel').val();
+        var address = $('.address').val()
+        var email = $('.email').val()
+        var post_data = {
+            'hname':hname,
+            'hpwd':hpwd,
+            'tel':tel,
+            'address':address,
+            'email':email,
+        }
         $.ajax({
             type:"post",
             contentType:"application/json",
             dataType:"json",
-            url:"http://127.0.0.1:8000/v1/users/register",
-            // data:JSON.stringify(post_data),
+            url:"http://127.0.0.1:8000/v1/user/register",
+            data:JSON.stringify(post_data),
             success:function(result){
                 if(200 == result.code){
-                    alert("测试成功,测试的数据为:"+result.data)
+                    window.localStorage.setItem('user_token',result.data.token)
+                    window.localStorage.setItem('username',result.username)
+                    alert(result.data)
                 }else{
-                    alert(result.error)
+                    alert("注册失败")
                 }
             }
         });
