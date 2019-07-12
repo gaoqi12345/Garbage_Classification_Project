@@ -8,4 +8,4 @@ def register01():
     return send_file('templates/register.html')
 
 if __name__ == '__main__':
-    app.run(debug=True,port=9999)
+    app.run(debug=True)
