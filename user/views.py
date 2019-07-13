@@ -5,11 +5,13 @@ import time
 import jwt
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.core.mail import send_mail
 
 # Create your views here.
 from user.models import User
 
-
+key = 'gra123456'
+user_email = {}
 def login_view(request):
     pass
 
@@ -78,7 +80,68 @@ def register_view(request):
         return JsonResponse(result)
 
 def forget_password_view(request):
-    pass
+    if request.method == 'POST':
+        json_str = request.body
+        if not json_str:
+            # 对post行为没有数据提交过来时抛出异常
+            result = {'code': 2002, 'error': 'Please Post data'}
+            return JsonResponse(result)
+        json_obj = json.loads(json_str)
+        email = json_obj.get('email')
+        try:
+            User.objects.get(email=email)
+        except Exception as e:
+            result = {'code': 2010, 'error': 'The email is not exist!'}
+            return JsonResponse(result)
+
+
+        title = '垃圾找家---找回密码链接'
+        exp_time = int(time.time())+3600
+        payload = {'email':email,'exp':exp_time }
+        encryption_time = jwt.encode(payload, key, algorithm='HS256')
+
+        rest_url = 'http://127.0.0.1:5000/reset_password?exp_time='+ encryption_time.decode()
+
+        message = '找回密码链接为:'+rest_url
+        send_mail(title, message, '895004589@qq.com',
+                  [email], fail_silently=False)
+
+        result = {'code': 200, 'data':'邮件发送成功'}
+        return JsonResponse(result)
+
+def rest_password_view(request):
+
+    if request.method == 'GET':
+        get_exp_time = request.GET['exp_time']
+        try:
+            res = jwt.decode(get_exp_time, key, algorithms='HS256')
+        except Exception as e:
+            result = {'code': 200, 'data': '链接以失效'}
+            return JsonResponse(result)
+        user_email['email'] = res['email']
+        result = {'code': 200}
+        return JsonResponse(result)
+    elif request.method == 'POST':
+        email = user_email['email']
+        try:
+            user = User.objects.get(email=email)
+        except Exception as e:
+            result = {'code': 2010,'error':'The email is not exist!'}
+            return JsonResponse(result)
+
+        json_str = request.body
+        if not json_str:
+            # 对post行为没有数据提交过来时抛出异常
+            result = {'code': 2002, 'error': 'Please Post data'}
+            return JsonResponse(result)
+        json_obj = json.loads(json_str)
+        new_password = json_obj.get('new_password')
+        h_p = hashlib.sha1()
+        h_p.update(new_password.encode())
+        user.password = h_p.hexdigest()
+        user.save()
+        result = {'code': 200,'data':'修改成功'}
+        return JsonResponse(result)
 
 def user_info_view(request):
     pass
@@ -117,7 +180,6 @@ def make_token(username,expire = 3600*24):
     :param expire:token存活的时间
     :return:
     '''
-    key = 'gra123456'
     now_t = time.time()
     payload = {'username':username,'exp': int(now_t + expire)}
     return jwt.encode(payload, key, algorithm='HS256')
